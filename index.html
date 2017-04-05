@@ -1,0 +1,241 @@
+<html>
+<head>
+<title>获取鼠标坐标</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+</head>
+<body>
+<div id ='cv' style="height:100vw; width:100vw;background-color:#ffffff;">
+	<canvas id = "mycanvas">
+		
+	</canvas>
+</div>
+<div id ='info' style="height:20vw; width:100vw;">
+	<p>
+	  <span>X:</span>
+	  <span>Y:</span>
+	</p>
+	<p>
+	  <h6>黑先:</h6>
+	  <h6>白先:</h6>
+	</p>
+</div>
+</body>
+<script type="text/javascript">
+    (function(){
+      //定义画布的大小
+   	  var cvs = document.getElementById('mycanvas');
+   	  var cv = document.getElementById('cv');
+   	  cvs.height = cv.clientWidth;
+   	  cvs.width  = cv.clientWidth;
+
+      //定义棋子
+      now_select = 'B'; 
+      img_bai    = "img/bai.png";
+      img_hei    = "img/hei.png";
+
+   	  //定义棋盘点
+   	  xle        = 19;
+   	  yle        = 19;
+   	  x_width    = 70;
+   	  y_height   = 70;
+   	  qipan  = new Array();
+   	  for (var i = xle; i >= 0; i--) {
+   	  	qipan[i] = new Array();
+   	  	for (var j = yle; j >= 0; j--) {
+   	  		qipan[i][j] = new Array();
+   	  		qipan[i][j]['x'] = i*x_width;
+   	  		qipan[i][j]['y'] = j*y_height;
+   	  	};
+   	  };
+
+   	  var cvs = document.getElementById('mycanvas');
+      var gct = cvs.getContext('2d');
+      gct.lineWidth = 1;
+      gct.strokeStyle = 'rgba(0,0,0,0.2)'; 
+
+   	  //画棋盘
+	    for (var i = xle; i >= 0; i--) {
+	  	  gct.moveTo(i*x_width,0);
+	  	  gct.lineTo(i*x_width,yle*y_height);
+   	  };
+   	  for (var y = yle; y >= 0; y--) {
+	  	  gct.moveTo(0,y*y_height);
+	  	  gct.lineTo(xle*x_width,y*y_height);
+   	  };
+   	  gct.stroke();
+
+    })();
+
+    document.getElementById('mycanvas').addEventListener('click',function(){
+    	//设置鼠标坐标点
+    	positionObj(event,'cv');
+      //判断和获取落点
+      get_luodian();
+      //画图
+    	var cvs = document.getElementById('mycanvas');
+    	var gct = cvs.getContext('2d');
+    	var img=new Image();
+		  img.onload = function(){
+        //判断落点是否已经有棋子
+        if(true_x&&true_y&&!qipan[true_i][true_j]['select']){
+           gct.drawImage(img,true_x-(img.width/2.3),true_y-(img.height/2.3));
+           qipan[true_i][true_j]['select'] = true;
+           qipan[true_i][true_j]['color']  = now_select;
+        }
+
+        //判断输赢
+        if(is_win()){
+            alert('赢了');
+        }
+
+        //选定走棋方
+        if(now_select=='H'){
+            now_select='B';
+        }else{
+            now_select=='H';
+        }
+        
+		  };
+      
+      if(now_select=='H'){
+        img.src=img_hei;
+      }else{
+        img.src=img_bai;
+      }
+		  
+    },false)
+
+//判断和获取落点
+function get_luodian(){
+   true_x = null;
+   true_y = null;
+   var range  = x_width/2;
+   for (var i = xle - 1; i >= 1; i--) {
+      for (var j = yle - 1; j >= 1; j--) {
+         if(x<(qipan[i][j]['x']+range)&&x>(qipan[i][j]['x']-range)&&y<(qipan[i][j]['y']+range)&&y>(qipan[i][j]['y']-range)){
+            true_x = qipan[i][j]['x'];
+            true_y = qipan[i][j]['y'];
+            true_i = i;
+            true_j = j;
+         }
+      };
+   };
+}
+
+//判断输赢
+function is_win(){
+  //四个方向连5点，以中心向外扩散
+  
+  //北-南 x轴不变，y轴各移4格----
+  var win = false;
+  var sum_top = 0;
+  var sum_bottom = 0;
+
+  //------竖向--------
+  for (var i = 1; i < 6; i++) {
+      if(qipan[true_i][true_j-i]['color']==now_select){
+          sum_top++;
+      }else{
+          break;
+      }
+  }
+
+  for (var i = 1; i < 6; i++) {
+       if(qipan[true_i][true_j+i]['color']==now_select){
+          sum_bottom++;
+      }else{
+          break;
+      }
+  };
+
+  if((sum_top+sum_bottom)==4){
+     return true;
+  }
+
+  //------横向--------
+  sum_top = 0;
+  sum_bottom = 0;
+  for (var i = 1; i < 6; i++) {
+      if(qipan[true_i-i][true_j]['color']==now_select){
+          sum_top++;
+      }else{
+          break;
+      }
+  }
+
+  for (var i = 1; i < 6; i++) {
+       if(qipan[true_i+i][true_j]['color']==now_select){
+          sum_bottom++;
+      }else{
+          break;
+      }
+  };
+
+  if((sum_top+sum_bottom)==4){
+     return true;
+  }
+
+  //------左上-右下--------
+  sum_top = 0;
+  sum_bottom = 0;
+  for (var i = 1; i < 6; i++) {
+      if(qipan[true_i-i][true_j-i]['color']==now_select){
+          sum_top++;
+      }else{
+          break;
+      }
+  }
+
+  for (var i = 1; i < 6; i++) {
+       if(qipan[true_i+i][true_j+i]['color']==now_select){
+          sum_bottom++;
+      }else{
+          break;
+      }
+  };
+
+  if((sum_top+sum_bottom)==4){
+     return true;
+  }
+
+  //------右上-左下--------
+  sum_top = 0;
+  sum_bottom = 0;
+  for (var i = 1; i < 6; i++) {
+      if(qipan[true_i+i][true_j-i]['color']==now_select){
+          sum_top++;
+      }else{
+          break;
+      }
+  }
+
+  for (var i = 1; i < 6; i++) {
+       if(qipan[true_i-i][true_j+i]['color']==now_select){
+          sum_bottom++;
+      }else{
+          break;
+      }
+  };
+
+  if((sum_top+sum_bottom)==4){
+     return true;
+  }
+
+}
+
+//获取相对坐标
+function positionObj(event,id){
+    var thisX = document.getElementById(id).offsetLeft;
+    var thisY = document.getElementById(id).offsetTop;
+    //获得页面滚动的距离； 
+    var thisScrollTop = document.documentElement.scrollTop + document.body.scrollTop;
+    event = event||window.event; 
+    //获得相对于对象定位的横标值 = 鼠标当前相对页面的横坐标值 - 对象横坐标值；
+    x = event.clientX - thisX;
+    //获得相对于对象定位的纵标值 = 鼠标当前相对页面的纵坐标值 - 对象纵坐标值 + 滚动条滚动的高度； 
+    y = event.clientY - thisY + thisScrollTop; 
+}
+</script>
+
+</html>
